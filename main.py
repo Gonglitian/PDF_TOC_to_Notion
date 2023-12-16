@@ -26,11 +26,10 @@ def get_children_blocks(pdf_path):
     except Exception as e:
         print(f"无法打开PDF文件: {e}")
         return None
-    # 获取PDF文件标题
-    paper_title = pdf_path.split('/')[-1].split('.')[0]
     # 获取PDF文件目录
     toc = document.get_toc(simple=False)
     if not toc:
+        # todo 没有toc则判断为期刊文章，考虑用gpt处理，参考chatpaper
         print("PDF文件没有大纲信息。")
         document.close()
         return None
@@ -56,11 +55,7 @@ def get_children_blocks(pdf_path):
         children_blocks.append(heading_block)
 
     document.close()
-    paper_note_template = {
-        "title": paper_title,
-        "children_blocks": children_blocks,
-    }
-    return paper_note_template
+    return children_blocks
 
 
 def add_papers_to_notion_database(database_id, paper_note_template):
@@ -106,33 +101,28 @@ def add_papers_to_notion_database(database_id, paper_note_template):
     print(f"Page for '{paper_note_template['title']}' added to the database.")
 
 
+def add_blocks_to_page(page_id, children_blocks):
+    # 添加子块
+    notion.blocks.children.append(
+        block_id=page_id,
+        children=children_blocks,
+    )
+    print(f"Blocks added to page: {page_id}")
+
+
 load_dotenv(override=True)
 notion = Client(auth=os.environ.get("NOTION_TOKEN"))
 DATA_BASE_ID = os.environ.get("DATABASE_ID")
 PAPER_DATABASE_ID = os.environ.get("PAPER_DATABASE_ID")
 
-# ADD PAGE TO DATABASE
-# pdf_path = 'src_file/doc1.pdf'  # PDF文件路径
-# paper_note_template = get_children_blocks(pdf_path)
-# add_papers_to_notion_database(os.environ.get(
-#     "DATABASE_ID"), paper_note_template)
-
-# PRINT ALL PAGES IN PAPER_DATABASE
-
-
-PDF_DIR_PATH = r"D:\EdgeDownload"
-
+PDF_DIR_PATH = r"E:\2023Fall\毕业设计\ref\论文"
 CNKI_PDF_path_dict = {}
 # 对本地文件夹中的pdf文件进行遍历
 for file in os.listdir(PDF_DIR_PATH):
-    # print(pdf_file)
     if file.endswith(".pdf"):
         pdf_path = os.path.join(PDF_DIR_PATH, file)
-        # print(pdf_path)
         # add path to dict
         CNKI_PDF_path_dict[file.split('_')[0]] = pdf_path
-
-print(CNKI_PDF_path_dict)
 
 # 列出数据库中所有页面
 response = notion.databases.query(PAPER_DATABASE_ID)
@@ -140,27 +130,12 @@ response = notion.databases.query(PAPER_DATABASE_ID)
 for page in response['results']:
     # page_id = page['id']
     # page_title = page['properties']['Name']['title'][0]['text']['content']
-
-    print(page['properties']['Title']['rich_text'][0]['text']['content'])
-
-# CNKI_PDF_path_dict = {:PDF_DIR_PATH + ""}
-# 初始化Notion客户端
-
-# 查询数据库
-# query_response = notion.databases.query(
-#     **{
-#         "database_id": PAPER_DATABASE_ID,
-#         "filter": {
-#             "or": [
-#                 {"property": "Name", "text": {"contains": "1"}},]}
-#     }
-# )
-
-# # 检查是否有匹配的页面
-# if query_response['results']:
-#     # 获取第一个匹配项的页面ID
-#     page_id = query_response['results'][0]['id']
-#     print(f"Found page ID for the PDF 室外变电站巡检机器人自主导航研究: {page_id}")
-# else:
-#     print("No page found for the PDF 室外变电站巡检机器人自主导航研究.")
-##
+    # todo 如果page已经有children，就不添加
+    # print(page['properties']['Title']['rich_text'][0]['text']['content'])
+    Title_of_paper = page['properties']['Title']['rich_text'][0]['text']['content']
+    pdf_path = CNKI_PDF_path_dict.get(Title_of_paper, None)
+    if pdf_path is None:
+        print(f"没有找到{Title_of_paper}的PDF文件")
+        continue
+    toc_blocks = get_children_blocks(pdf_path)
+    print(toc_blocks)

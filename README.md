@@ -20,6 +20,6 @@ pip install -r requirements.txt
 2. 运行main.py
 
 # TODO
-- [] 期刊文章用ChatGPT提取主要内容
-- [] 硕博论文对于每一章用ChatGPT提取主要内容
+- [ ] 期刊文章用ChatGPT提取主要内容
+- [ ] 硕博论文对于每一章用ChatGPT提取主要内容
 - [x] 1

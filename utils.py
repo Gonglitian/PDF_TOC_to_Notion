@@ -73,6 +73,7 @@ def get_children_blocks(pdf_path):
     # 打开PDF文件
     try:
         document = fitz.open(pdf_path)
+
     except Exception as e:
         print(f"无法打开PDF文件: {e}")
         return None
@@ -80,7 +81,8 @@ def get_children_blocks(pdf_path):
     toc = document.get_toc(simple=False)
     if not toc:
         # todo 没有toc则判断为期刊文章，考虑用gpt处理，参考chatpaper
-        print("PDF文件没有大纲信息。")
+        pdf_title = pdf_path.split('\\')[-1]
+        print(f"PDF文件`{pdf_title}.pdf`没有大纲信息，可能为期刊文章")
         document.close()
         return None
 

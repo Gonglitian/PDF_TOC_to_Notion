@@ -32,7 +32,7 @@ def log(func):
 
 
 print = log(print)
-
+load_dotenv(override=True)
 notion = Client(auth=os.environ.get("NOTION_TOKEN"))
 
 

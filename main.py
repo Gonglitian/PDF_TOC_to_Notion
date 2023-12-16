@@ -22,7 +22,9 @@ if __name__ == '__main__':
     # notion = Client(auth=os.environ.get("NOTION_TOKEN"))
     # print(DATABASE_ID)
     # response = notion.databases.query(DATABASE_ID)
-    response = notion.blocks.children.list(TEST_PAGE_ID)
+    response = notion.pages.properties.retrieve(
+        TEST_PAGE_ID, property_id="Title")
+    print(response)
     # # 打印每个页面的ID和标题
     # for page in response['results']:
     #     page_id = page['id']
@@ -37,4 +39,3 @@ if __name__ == '__main__':
     #         continue
     #     add_blocks_to_page(page_id, children_blocks)
     # add_blocks_to_page("0ba99bcf4fb44689a6fca8589c89f36", children_blocks)
-

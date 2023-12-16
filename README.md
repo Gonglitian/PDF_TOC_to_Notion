@@ -1,4 +1,4 @@
-# PDF_ToC_to_Notion
+# PDF_TOC_to_Notion
 
 一个将本地硕博论文PDF的TOC导入Notion数据库中的Python脚本
 

@@ -5,9 +5,7 @@ from notion_client import Client
 import json
 import fitz  # PyMuPDF
 
-HEADING1 = "heading_1"
-HEADING2 = "heading_2"
-HEADING3 = "heading_3"
+HEADINGS = ["heading_1", "heading_2", "heading_3"]
 PARAGRAPH = "paragraph"
 BULLETED_LIST_ITEM = "bulleted_list_item"
 NUMBERED_LIST_ITEM = "numbered_list_item"
@@ -21,12 +19,22 @@ EMBED = "embed"
 IMAGE = "image"
 
 
-load_dotenv(override=True)
-notion = Client(auth=os.environ.get("NOTION_TOKEN"))
-DATA_BASE_ID = os.environ.get("DATABASE_ID")
-PAPER_DATABASE_ID = os.environ.get("PAPER_DATABASE_ID")
+DEBUG = True
 
-test_page_id = "533f6a7d3f6947cfaa40e18c2137d827"
+
+def log(func):
+    def wrapper(*args, **kwargs):
+
+        if DEBUG:
+            func(*args, **kwargs)
+        else:
+            pass
+    return wrapper
+
+
+print = log(print)
+
+notion = Client(auth=os.environ.get("NOTION_TOKEN"))
 
 
 def assemble_page_block_object(block_type, block_content):
@@ -62,22 +70,6 @@ def add_blocks_to_page(page_id, children_blocks):
     print(f"Blocks added to page: {page_id}")
 
 
-DEBUG = True
-
-
-def log(func):
-    def wrapper(*args, **kwargs):
-
-        if DEBUG:
-            func(*args, **kwargs)
-        else:
-            pass
-    return wrapper
-
-
-print = log(print)
-
-
 def get_children_blocks(pdf_path):
     # 打开PDF文件
     try:
@@ -96,28 +88,12 @@ def get_children_blocks(pdf_path):
     children_blocks = []
     for level, title, page, x in toc:
         level = min(level, 3)  # 限制Markdown标题层级在1到3
-        heading_type = "heading_%s" % level
-        heading_block = {
-            "object": "block",
-            heading_type: {
-                "rich_text": [
-                    {
-                        "text": {
-                            "content": title,  # 目录项
-                        },
-                    },
-                ],
-            },
-        }
+        heading_type = HEADINGS[level - 1]
+        heading_block = assemble_page_block_object(heading_type, title)
         children_blocks.append(heading_block)
 
     document.close()
     return children_blocks
-
-
-add_blocks_to_page(test_page_id, [
-    assemble_page_block_object("bulleted_list_item", "Heading 2"),
-])
 
 
 def add_papers_to_notion_database(database_id, paper_note_template):

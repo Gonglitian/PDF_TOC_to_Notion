@@ -1,13 +1,11 @@
 from notion_client import Client
 from dotenv import load_dotenv
 import os
-from utils import add_blocks_to_page, assemble_page_block_object
+from utils import add_blocks_to_page, get_children_blocks, notion
 
 
 if __name__ == '__main__':
     load_dotenv(override=True)
-    notion = Client(auth=os.environ.get("NOTION_TOKEN"))
-    DATA_BASE_ID = os.environ.get("DATABASE_ID")
     PAPER_DATABASE_ID = os.environ.get("PAPER_DATABASE_ID")
     PDF_DIR_PATH = r"E:\2023Fall\毕业设计\ref\论文"
 
@@ -20,6 +18,7 @@ if __name__ == '__main__':
             CNKI_PDF_path_dict[file.split('_')[0]] = pdf_path
 
     # 列出数据库中所有页面
+    notion = Client(auth=os.environ.get("NOTION_TOKEN"))
     response = notion.databases.query(PAPER_DATABASE_ID)
     # # 打印每个页面的ID和标题
     for page in response['results']:
@@ -31,5 +30,6 @@ if __name__ == '__main__':
             print(f"没有找到{Title_of_paper}的PDF文件")
             continue
         children_blocks = get_children_blocks(pdf_path)
-        print(children_blocks)
-        pass
+        if children_blocks is None:
+            continue
+        add_blocks_to_page(page_id, children_blocks)

@@ -1,0 +1,11 @@
+{
+  "pdf_path": "demo.pdf",
+  "query": "all: ChatGPT robot", //optional
+  "key_word": "reinforcement learning", //optional
+  "filter_keys": "ChatGPT robot", //optional
+  "max_results": 1, //optional
+  "sort": "Relevance", //optional
+  "save_image": false,
+  "file_format": "md",
+  "language": "zh"
+}

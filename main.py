@@ -1,7 +1,7 @@
 from notion_client import Client
 from dotenv import load_dotenv
 import os
-from utils import PDF_Summary
+from utils import NotionUploader
 
 
 if __name__ == '__main__':
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     PDF_DIR_PATH = r"E:\2023Fall\毕业设计\ref\论文"
     notion = Client(auth=os.environ.get("NOTION_TOKEN"))
     CNKI_PDF_path_dict = {}
-    PDF_Summary = PDF_Summary(notion)
+    NotionUploader = NotionUploader(notion)
     # 对本地文件夹中的pdf文件进行遍历
 
     for file in os.listdir(PDF_DIR_PATH):
@@ -31,8 +31,10 @@ if __name__ == '__main__':
             print(f"在PDF_DIR_PATH中没有找到`{paper_title}.pdf`")
             continue
         # 获取PDF文件目录
-        children_blocks = PDF_Summary.get_children_blocks(pdf_path)
+        children_blocks = NotionUploader.get_children_blocks(pdf_path)
         # 如果没有目录，就跳过
         if children_blocks is None:
             continue
-        PDF_Summary.upload_blocks_to_page(page_id, children_blocks)
+        NotionUploader.upload_blocks_to_page(page_id, children_blocks)
+
+

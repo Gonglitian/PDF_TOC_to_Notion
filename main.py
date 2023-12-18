@@ -1,18 +1,19 @@
 from notion_client import Client
-from dotenv import load_dotenv
-import os
 from utils import NotionUploader
+import configparser
+import os
 
 
 if __name__ == '__main__':
-    load_dotenv(override=True)
-    PAPER_DATABASE_ID = os.environ.get("PAPER_DATABASE_ID")
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    PAPER_DATABASE_ID = config["NOTION"]["PAPER_DATABASE_ID"]
     PDF_DIR_PATH = r"E:\2023Fall\毕业设计\ref\论文"
-    notion = Client(auth=os.environ.get("NOTION_TOKEN"))
-    CNKI_PDF_path_dict = {}
+    notion = Client(auth=config["NOTION"]["NOTION_TOKEN"])
     NotionUploader = NotionUploader(notion)
-    # 对本地文件夹中的pdf文件进行遍历
 
+    CNKI_PDF_path_dict = {}  # {title: path}
+    # 对本地文件夹中的pdf文件进行遍历
     for file in os.listdir(PDF_DIR_PATH):
         if file.endswith(".pdf"):
             pdf_path = os.path.join(PDF_DIR_PATH, file)
@@ -36,5 +37,3 @@ if __name__ == '__main__':
         if children_blocks is None:
             continue
         NotionUploader.upload_blocks_to_page(page_id, children_blocks)
-
-

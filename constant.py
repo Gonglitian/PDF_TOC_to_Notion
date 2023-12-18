@@ -1,0 +1,14 @@
+HEADINGS = ["heading_1", "heading_2", "heading_3"]
+PARAGRAPH = "paragraph"
+BULLETED_LIST_ITEM = "bulleted_list_item"
+NUMBERED_LIST_ITEM = "numbered_list_item"
+TO_DO = "to_do"
+TOGGLE = "toggle"
+CHILD_PAGE = "child_page"
+QUOTE = "quote"
+CALLOUT = "callout"
+CODE = "code"
+EMBED = "embed"
+IMAGE = "image"
+DEBUG = True
+TEST_PAGE_ID = "49e7733874fe403c85968ac7cad67919"

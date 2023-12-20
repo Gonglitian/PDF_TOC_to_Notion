@@ -8,10 +8,93 @@ from constant import *
 import openai
 from prompt import *
 
+from mistletoe.block_token import BlockToken, tokenize
+import itertools
+from mistletoe import span_token
+from md2notion.NotionPyRenderer import NotionPyRenderer
+
+
+class Document(BlockToken):
+    """
+    文档标记。
+    """
+
+    def __init__(self, lines):
+        # 如果传入的是字符串，则按行分割为列表
+        if isinstance(lines, str):
+            lines = lines.splitlines(keepends=True)
+
+        # 确保每行都以换行符结尾
+        lines = [line if line.endswith(
+            '\n') else '{}\n'.format(line) for line in lines]
+
+        # 在 "$\n" 上方和下方添加换行符
+        new_lines = []  # 存储处理后的行列表
+        temp_line = None  # 临时存储行的变量
+        triggered = False  # 标志变量，表示是否触发了 "$\n"
+
+        for line in lines:
+            # 如果行内只包含空格和换行符，则跳过该行
+            if not triggered and '$\n' in line:
+                temp_line = [None, line, None]  # 用于存储 "$\n" 相关的行
+                triggered = True
+            elif triggered:
+                temp_line[1] += line
+                if '$\n' in line:
+                    temp_line[2] = '\n'
+                    new_lines.append(temp_line)  # 将处理后的行添加到列表中
+                    temp_line = None
+                    triggered = False
+            else:
+                new_lines.append([None, line, None])  # 将其他行添加到列表中
+
+        if temp_line is not None:
+            new_lines.append(temp_line)  # 处理最后一行
+
+        # 将列表展开为一维，并过滤掉空行
+        new_lines = list(itertools.chain(*new_lines))
+        new_lines = list(filter(lambda x: x is not None, new_lines))
+        new_lines = ''.join(new_lines)  # 将行连接为字符串
+        lines = new_lines.splitlines(keepends=True)  # 将字符串按行分割为列表
+        lines = [line if line.endswith('\n') else '{}\n'.format(
+            line) for line in lines]  # 确保每行都以换行符结尾
+
+        self.footnotes = {}  # 存储脚注的字典
+        global _root_node
+        _root_node = self  # 设置全局变量 _root_node
+        span_token._root_node = self  # 设置 span_token 类的 _root_node
+        self.children = tokenize(lines)  # 对行进行标记化处理，生成子标记列表
+        span_token._root_node = None  # 清除 span_token 类的 _root_node
+        _root_node = None  # 清除全局变量 _root_node
+
+
+
+
 
 class NotionUploader:
-    def __init__(self, notion):
-        self.notion_client = notion
+    def __init__(self, config):
+        self.config = config
+        self.notion_client = None
+        self.notion_database_id = None
+        self.init_client()
+
+    def init_client(self):
+        self.notion_client = Client(auth=self.config.get(
+            'Notion', 'NOTION_TOKEN'))
+        self.notion_database_id = self.config.get(
+            'Notion', 'PAPER_DATABASE_ID')
+
+    def upload_markdown_to_page(self, page_id, children_blocks):
+        # 检查是否有子块
+        if self.has_children_blocks(page_id):
+            return
+
+        # 添加子块
+        self.notion_client.blocks.children.append(
+            block_id=page_id,
+            children=children_blocks,
+        )
+        print(f"Blocks added to page: {page_id}")
 
     def assemble_page_block_object(self, block_type, block_content):
         # todo 考虑列表类型的block
@@ -31,20 +114,31 @@ class NotionUploader:
             return True
         return False
 
-    def upload_blocks_to_page(self, page_id, children_blocks):
-        # 检查是否有子块
-        if self.has_children_blocks(page_id):
-            return
-
-        # 添加子块
+    def upload_to_page(self, page_id, markdown_content):
         self.notion_client.blocks.children.append(
             block_id=page_id,
-            children=children_blocks,
+            children=[
+                {
+                    'object': 'block',
+                    'type': 'paragraph',
+                    'paragraph': {
+                        'rich_text': [
+                            {
+                                'type': 'text',
+                                'text': {
+                                    'content': markdown_content
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
         )
-        print(f"Blocks added to page: {page_id}")
+        pass
 
-    def add_markdown_to_page(self, markdown_content):
-        # todo
+    @staticmethod
+    def markdown_to_notion_block():
+
         pass
 
 
@@ -81,12 +175,6 @@ class Summarizer:
         for choice in response.choices:
             result += choice.message.content
         return result
-
-    def get_degree_prompt(self):
-        pass
-
-    def get_journal_prompt(self):
-        pass
 
     def switch_api_key(self):
         openai.api_key = self.api_pool[self.current_api_index]

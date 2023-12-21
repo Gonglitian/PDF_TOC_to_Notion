@@ -11,7 +11,7 @@ git clone https://github.com/Gonglitian/PDF_ToC_to_Notion.git
 ```bash
 cd ./PDF_ToC_to_Notion
 ```
-105
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -19,6 +19,10 @@ pip install -r requirements.txt
 ## 2.运行main.py
 
 # TODO
-- [ ] 期刊文章用ChatGPT提取主要内容
-- [ ] 硕博论文对于每一章用ChatGPT提取主要内容(每一章当成一篇期刊论文hh)
-- [x] 1
+- [x] 期刊文章用ChatGPT提取主要内容
+- [x] 硕博论文对于每一章用ChatGPT提取主要内容(每一章当成一篇期刊论文)
+- [ ] 整理代码
+  - [ ] 串联总结功能和上传功能
+  - [ ] `uploader.py`代码优化，建议重构
+  - [ ] 函数注释，类型
+  - [ ] 更新`requirements.txt`

@@ -1,8 +1,9 @@
-.history
+/.history
 src_file
 result
-.env
 config.ini
-__pycache__
+/__pycache__
 .vscode
-draft.*
+draft.md
+draft.excalidraw
+*.py

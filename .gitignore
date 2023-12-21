@@ -5,3 +5,4 @@ result
 config.ini
 __pycache__
 .vscode
+draft.*

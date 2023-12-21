@@ -8,8 +8,14 @@ class Md2NotionUploader:
     image_host_object = None
     local_root = "markdown_notebook"
 
-    def __init__(self, image_host='smms', onedrive_client_id=None, client_secret=None, auth=False,
-                 smms_token=None):
+    def __init__(
+        self,
+        image_host="smms",
+        onedrive_client_id=None,
+        client_secret=None,
+        auth=False,
+        smms_token=None,
+    ):
         self.image_host = image_host
         self.smms_token = smms_token
         self.onedrive_client_id = onedrive_client_id
@@ -39,90 +45,83 @@ class Md2NotionUploader:
 
     @staticmethod
     def split_text(text):
-        text = re.sub(r'<img\s+src="(.*?)"\s+alt="(.*?)"\s+.*?/>',
-                      r'![\2](\1)', text)
+        text = re.sub(r'<img\s+src="(.*?)"\s+alt="(.*?)"\s+.*?/>', r"![\2](\1)", text)
         out = []
-        double_dollar_parts = re.split(r'(\$\$.*?\$\$)', text, flags=re.S)
+        double_dollar_parts = re.split(r"(\$\$.*?\$\$)", text, flags=re.S)
 
         for part in double_dollar_parts:
-            if part.startswith('$$') and part.endswith('$$'):
-                part = part.replace('{align}', '{aligned}')
-                part = part.replace('\\\n', '\\\\\n')
+            if part.startswith("$$") and part.endswith("$$"):
+                part = part.replace("{align}", "{aligned}")
+                part = part.replace("\\\n", "\\\\\n")
                 out.append(part)
             else:
-                image_parts = re.split(r'(!\[.*?\]\(.*?\))', part)
+                image_parts = re.split(r"(!\[.*?\]\(.*?\))", part)
                 out.extend(image_parts)
-        out = [t for t in out if t.strip() != '']
+        out = [t for t in out if t.strip() != ""]
         return out
 
     def blockparser(self, s, _type="paragraph"):
         parts = self.split_text(s)
         result = []
         for part in parts:
-            if part.startswith('$$'):
-                expression = part.strip('$$')
-                result.append({
-                    "equation": {
-                        "expression": expression.strip()
-                    }
-                })
-            elif part.startswith('![') and '](' in part:
-                caption, url = re.match(r'!\[(.*?)\]\((.*?)\)', part).groups()
+            if part.startswith("$$"):
+                expression = part.strip("$$")
+                result.append({"equation": {"expression": expression.strip()}})
+            elif part.startswith("![") and "](" in part:
+                caption, url = re.match(r"!\[(.*?)\]\((.*?)\)", part).groups()
                 url = self.convert_to_oneline_url(url)
-                result.append({
-                    "image": {
-                        "caption": [],  # caption,
-                        "type": "external",
-                        "external": {
-                            "url": url
-                        }  # 'embed': {'caption': [],'url': url} #<-- for onedrive
+                result.append(
+                    {
+                        "image": {
+                            "caption": [],  # caption,
+                            "type": "external",
+                            "external": {
+                                "url": url
+                            },  # 'embed': {'caption': [],'url': url} #<-- for onedrive
+                        }
                     }
-                })
+                )
             else:
-                result.append({
-                    _type: {
-                        "rich_text": self.sentence_parser(part)
-                    }
-                })
+                result.append({_type: {"rich_text": self.sentence_parser(part)}})
 
         return result
 
     @staticmethod
     def is_balanced(s):
-        single_dollar_count = s.count('$')
-        double_dollar_count = s.count('$$')
+        single_dollar_count = s.count("$")
+        double_dollar_count = s.count("$$")
 
         return single_dollar_count % 2 == 0 and double_dollar_count % 2 == 0
 
     @staticmethod
     def parse_annotations(text):
         annotations = {
-            'bold': False,
-            'italic': False,
-            'strikethrough': False,
-            'underline': False,
-            'code': False,
-            'color': 'default'
+            "bold": False,
+            "italic": False,
+            "strikethrough": False,
+            "underline": False,
+            "code": False,
+            "color": "default",
         }
 
         # Add bold
-        if '**' in text or '__' in text:
-            annotations['bold'] = True
-            text = re.sub(r'\*\*|__', '', text)
+        if "**" in text or "__" in text:
+            annotations["bold"] = True
+            text = re.sub(r"\*\*|__", "", text)
 
         # Add italic
-        if '*' in text or '_' in text:
-            annotations['italic'] = True
-            text = re.sub(r'\*|_', '', text)
+        if "*" in text or "_" in text:
+            annotations["italic"] = True
+            text = re.sub(r"\*|_", "", text)
 
         # Add strikethrough
-        if '~~' in text:
-            annotations['strikethrough'] = True
-            text = text.replace('~~', '')
+        if "~~" in text:
+            annotations["strikethrough"] = True
+            text = text.replace("~~", "")
 
-        if '`' in text:
-            annotations['code'] = True
-            text = text.replace('`', '')
+        if "`" in text:
+            annotations["code"] = True
+            text = text.replace("`", "")
 
         return annotations, text
 
@@ -134,9 +133,9 @@ class Md2NotionUploader:
         if (".png" not in url) and (".jpg" not in url) and (".svg" not in url):
             return url
         # we will locate the Onedrive image
-        if self.image_host == 'onedrive':
+        if self.image_host == "onedrive":
             return self.convert_to_oneline_url_onedrive(url)
-        elif self.image_host == 'smms':
+        elif self.image_host == "smms":
             return self.convert_to_oneline_url_smms(url)
         else:
             raise "Invalid Image Hosting"
@@ -146,12 +145,11 @@ class Md2NotionUploader:
             # the script path is at root
             path = os.path.abspath(url)
             drive, path = os.path.splitdrive(path)
-            onedrive_path = '/markdown_notebook' + \
-                path.split('markdown_notebook', 1)[1]
+            onedrive_path = "/markdown_notebook" + path.split("markdown_notebook", 1)[1]
         else:
             # the script path is not at root. then we whould use the self.local_root
-            url = url.strip('.').strip('/')
-            onedrive_path = f'/{self.local_root}/{url}'
+            url = url.strip(".").strip("/")
+            onedrive_path = f"/{self.local_root}/{url}"
         onedrive = self._get_onedrive_client()
         url = onedrive.get_link_by_path(onedrive_path)
         # url = onedrive.get_final_link_by_share(url)
@@ -169,70 +167,63 @@ class Md2NotionUploader:
             raise ValueError("Unbalanced math delimiters in the input string.")
 
         # Split string by inline math and markdown links
-        parts = re.split(r'(\$.*?\$|\[.*?\]\(.*?\))', s)
+        parts = re.split(r"(\$.*?\$|\[.*?\]\(.*?\))", s)
         result = []
 
         for part in parts:
-            if part.startswith('$'):
-                expression = part.strip('$')
-                result.append({
-                    "type": "equation",
-                    "equation": {
-                        "expression": expression
-                    }
-                })
-            elif part.startswith('[') and '](' in part:
+            if part.startswith("$"):
+                expression = part.strip("$")
+                result.append(
+                    {"type": "equation", "equation": {"expression": expression}}
+                )
+            elif part.startswith("[") and "](" in part:
                 # Process style delimiters before processing link
                 style_parts = re.split(
-                    r'(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`.*?`)', part)
+                    r"(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`.*?`)", part
+                )
                 for style_part in style_parts:
-                    annotations, clean_text = self.parse_annotations(
-                        style_part)
-                    if clean_text.startswith('[') and '](' in clean_text:
+                    annotations, clean_text = self.parse_annotations(style_part)
+                    if clean_text.startswith("[") and "](" in clean_text:
                         link_text, url = re.match(
-                            r'\[(.*?)\]\((.*?)\)', clean_text).groups()
+                            r"\[(.*?)\]\((.*?)\)", clean_text
+                        ).groups()
 
-                        result.append({
-                            "type": "text",
-                            "text": {
-                                "content": link_text,
-                                "link": {
-                                    "url": url
-                                }
-                            },
-                            "annotations": annotations,
-                            "plain_text": link_text,
-                            "href": url
-                        })
+                        result.append(
+                            {
+                                "type": "text",
+                                "text": {"content": link_text, "link": {"url": url}},
+                                "annotations": annotations,
+                                "plain_text": link_text,
+                                "href": url,
+                            }
+                        )
                     elif clean_text:
-                        result.append({
-                            "type": "text",
-                            "text": {
-                                "content": clean_text,
-                                "link": None
-                            },
-                            "annotations": annotations,
-                            "plain_text": clean_text,
-                            "href": None
-                        })
+                        result.append(
+                            {
+                                "type": "text",
+                                "text": {"content": clean_text, "link": None},
+                                "annotations": annotations,
+                                "plain_text": clean_text,
+                                "href": None,
+                            }
+                        )
             else:
                 # Split text by style delimiters
                 style_parts = re.split(
-                    r'(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`.*?`)', part)
+                    r"(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`.*?`)", part
+                )
                 for style_part in style_parts:
-                    annotations, clean_text = self.parse_annotations(
-                        style_part)
+                    annotations, clean_text = self.parse_annotations(style_part)
                     if clean_text:
-                        result.append({
-                            "type": "text",
-                            "text": {
-                                "content": clean_text,
-                                "link": None
-                            },
-                            "annotations": annotations,
-                            "plain_text": clean_text,
-                            "href": None
-                        })
+                        result.append(
+                            {
+                                "type": "text",
+                                "text": {"content": clean_text, "link": None},
+                                "annotations": annotations,
+                                "plain_text": clean_text,
+                                "href": None,
+                            }
+                        )
 
         return result
 
@@ -245,79 +236,79 @@ class Md2NotionUploader:
         return children
 
     def convert_table(self, _dict):
-
         parents_dict = {
-            'table_width': 3,
-            'has_column_header': False,
-            'has_row_header': False,
-            'children': []
+            "table_width": 3,
+            "has_column_header": False,
+            "has_row_header": False,
+            "children": [],
         }
-        assert 'rows' in _dict
-        if 'schema' in _dict and len(_dict['schema']) > 0:
-            parents_dict['has_column_header'] = True
-            line = [v['name'] for v in _dict['schema'].values()]
-            parents_dict['children'].append(self.convert_to_raw_cell(line))
+        assert "rows" in _dict
+        if "schema" in _dict and len(_dict["schema"]) > 0:
+            parents_dict["has_column_header"] = True
+            line = [v["name"] for v in _dict["schema"].values()]
+            parents_dict["children"].append(self.convert_to_raw_cell(line))
 
         width = 0
-        for line in _dict['rows']:
+        for line in _dict["rows"]:
             width = max(len(line), width)
-            parents_dict['children'].append(self.convert_to_raw_cell(line))
-        parents_dict['table_width'] = width
-        return [{'table': parents_dict}]
+            parents_dict["children"].append(self.convert_to_raw_cell(line))
+        parents_dict["table_width"] = width
+        return [{"table": parents_dict}]
 
     def convert_image(self, _dict):
-        url = _dict['source']
+        url = _dict["source"]
         url = self.convert_to_oneline_url(url)
         assert url is not None
-        return [{"image": {"caption": [], "type": "external",
-                           "external": {"url": url}
-                           }
-                 }]
+        return [
+            {"image": {"caption": [], "type": "external", "external": {"url": url}}}
+        ]
 
-    def convert_block_to_notion_api_style(self, blockDescriptor, notion, page_id):
-        """
-        Uploads a single blockDescriptor for NotionPyRenderer as the child of another block
-        and does any post processing for Markdown importing
-        @param {dict} blockDescriptor A block descriptor, output from NotionPyRenderer
-        @param {NotionBlock} blockParent The parent to add it as a child of
-        @param {string} mdFilePath The path to the markdown file to find images with
-        @param {callable|None) [imagePathFunc=None] See upload()
+    def get_new_blocks(self, blockDescriptors: list[dict]) -> list:
+        """接受一个列表，遍历列表中的字典，将其转换为notion的block格式
 
-        @todo Make mdFilePath optional and don't do searching if not provided
+        Args:
+            blockDescriptors (list[dict]): _description_
+
+        Returns:
+            list: _description_
         """
         new_name_map = {
-            'text': 'paragraph',
-            'bulleted_list': 'bulleted_list_item',
-            'header': 'heading_1',
-            'sub_header': 'heading_2',
-            'sub_sub_header': 'heading_3',
-            'numbered_list': 'numbered_list_item'
+            "text": "paragraph",
+            "bulleted_list": "bulleted_list_item",
+            "header": "heading_1",
+            "sub_header": "heading_2",
+            "sub_sub_header": "heading_3",
+            "numbered_list": "numbered_list_item",
         }
-        blockClass = blockDescriptor["type"]
+        result = []
+        for blockDescriptor in blockDescriptors:
+            old_name = blockDescriptor["type"]._type
+            new_name = new_name_map[old_name] if old_name in new_name_map else old_name
 
-        old_name = blockDescriptor['type']._type
-        new_name = new_name_map[old_name] if old_name in new_name_map else old_name
+            if new_name == "collection_view":
+                # this is a table
+                content_block = self.convert_table(blockDescriptor)
+            elif new_name == "image":
+                # this is a table
+                content_block = self.convert_image(blockDescriptor)
+            elif "title" in blockDescriptor:
+                content = blockDescriptor["title"]
+                content_block = self.blockparser(content, new_name)
+            elif new_name == "code":
+                language = blockDescriptor["language"]
+                content = blockDescriptor["title_plaintext"]
+                content_block = self.blockparser(content, new_name)
+                content_block[0]["code"]["language"] = language.lower()
+            else:
+                content_block = [{new_name: {}}]
+                # content_block == [{'bulleted_list_item': {...}}]
 
-        if new_name == 'collection_view':
-            # this is a table
-            content_block = self.convert_table(blockDescriptor)
-        elif new_name == 'image':
-            # this is a table
-            content_block = self.convert_image(blockDescriptor)
-        elif 'title' in blockDescriptor:
-            content = blockDescriptor['title']
-            content_block = self.blockparser(content, new_name)
-        elif new_name == 'code':
-            language = blockDescriptor['language']
-            content = blockDescriptor['title_plaintext']
-            content_block = self.blockparser(content, new_name)
-            content_block[0]['code']['language'] = language.lower()
-        else:
-            content_block = [{new_name: {}}]
-        return content_block
-
-    def convert_all_blocks(self, blocks):
-        all_blocks = []
-        for block in blocks:
-            ...
-        return all_blocks
+            if "children" in blockDescriptor:
+                if blockDescriptor["children"] != []:
+                    first_key = next(iter(content_block[0]), None)
+                    if first_key is not None:
+                        content_block[0][first_key]["children"] = self.get_new_blocks(
+                            blockDescriptor["children"]
+                        )
+            result.append(content_block[0])
+        return result

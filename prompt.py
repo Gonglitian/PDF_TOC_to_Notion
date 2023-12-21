@@ -1,13 +1,14 @@
-
 def get_degree_prompt(title: str = None, content: str = None) -> list:
     return [
-        {
-            "role": "system",
-            "content": "您是一位研究人员，擅长使用简洁的陈述来总结论文"
-        },
+        {"role": "system", "content": "您是一位研究人员，擅长使用简洁的陈述来总结论文"},
         {
             "role": "assistant",
-            "content": "这是一篇学位论文的某个章节，这是这个章节的标题:" + title + "，我需要您帮助阅读并总结这一章的内容：" + "`" + content+"`"
+            "content": "这是一篇学位论文的某个章节，这是这个章节的标题:"
+            + title
+            + "，我需要您帮助阅读并总结这一章的内容："
+            + "`"
+            + content
+            + "`",
         },
         {
             "role": "user",
@@ -38,19 +39,17 @@ def get_degree_prompt(title: str = None, content: str = None) -> list:
                 - **章节结论**: {总结本章的核心结论}
                 - **未来工作**: {提出未来研究的建议或本研究的潜在发展方向}
                  确保使用中文回答（专有名词需要用英文标记），陈述尽可能简洁且具有学术性，不要有太多重复信息，数值使用原始数字，一定要严格遵循格式，相应内容输出到大括号`{}`内，按照`\n`换行。                 
-                 """},
+                 """,
+        },
     ]
 
 
 def get_paper_prompt(title: str = None, content: str = None):
     return [
-        {
-            "role": "system",
-            "content": "您是[" + title + "]领域的研究人员，擅长使用简洁的陈述来总结论文"
-        },
+        {"role": "system", "content": "您是[" + title + "]领域的研究人员，擅长使用简洁的陈述来总结论文"},
         {
             "role": "assistant",
-            "content": "这是一篇中文论文的标题、作者、链接、摘要和引言。我需要您帮助阅读并总结：" + "`" + content+"`"
+            "content": "这是一篇中文论文的标题、作者、链接、摘要和引言。我需要您帮助阅读并总结：" + "`" + content + "`",
         },
         {
             "role": "user",
@@ -86,7 +85,8 @@ def get_paper_prompt(title: str = None, content: str = None):
                 - **实验设置**: xxx
                 - **实验结果**: xxx   
                  确保使用中文回答（专有名词需要用英文标记），陈述尽可能简洁且具有学术性，不要有太多重复信息，数值使用原始数字，一定要严格遵循格式，相应内容输出到xxx，按照\n换行。                 
-                 """},
+                 """,
+        },
     ]
 
 
